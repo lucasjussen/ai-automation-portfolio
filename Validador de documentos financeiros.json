@@ -1,0 +1,197 @@
+{
+  "name": "Validador de documentos financeiros",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "83307b6e-1e2f-4f91-aed2-92b29bf2a417",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"model\": \"claude-haiku-5-5\",\n  \"max_tokens\": 300,\n  \"system\": \"Você é um analista financeiro que confere documentos. Responda apenas com JSON válido, sem texto fora dele.\",\n  \"messages\": [{\n    \"role\": \"user\",\n    \"content\": \"<documento>Boleto ACME Ltda, valor total R$ 1.250,00, itens: serviço A R$ 800,00 e serviço B R$ 400,00.</documento>\\n\\nVerifique se a soma dos itens bate com o valor total. Responda no formato: {\\\"status\\\": \\\"conforme\\\" ou \\\"divergente\\\", \\\"soma_itens\\\": número, \\\"valor_total\\\": número, \\\"motivo\\\": \\\"texto curto\\\"}\"\n  }]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "12ca6ef7-fa9f-4a4d-9757-251a4548805c",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "oPd78OA8h94IAmjF",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1a5aab27-d5e7-4f49-9bf5-d9c9dd705c24",
+              "name": "resultado",
+              "value": "={{ JSON.parse($json.content[0].text) }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "bffa0ff1-0d37-4d75-9599-1f30f11ceca4",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0f5dd32d-b7ea-4d21-8edc-4f8fef653f1b",
+              "leftValue": "={{ $json.resultado.status }}",
+              "rightValue": "conforme",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        592,
+        0
+      ],
+      "id": "6b18d3b2-9689-4130-be3c-1faa6f1b7cd7",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        816,
+        -96
+      ],
+      "id": "44725781-cf43-46ad-af1c-aefb38f4b5c6",
+      "name": "enviar ao cliente"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        816,
+        48
+      ],
+      "id": "f212690f-64e6-4cee-90d8-dafe582de915",
+      "name": "mandar para validação humana"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "enviar ao cliente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "mandar para validação humana",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "360a4855-7212-4447-9e29-fa693191302a",
+  "meta": {
+    "instanceId": "93b47404a54bf9ee4986928acb45f0f36d2aed674ae3d19dd9d7f3a3f8adb040"
+  },
+  "nodeGroups": [],
+  "id": "je5HjjrsTqMt9aIV",
+  "tags": []
+}
