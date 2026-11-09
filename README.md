@@ -24,10 +24,6 @@ Projetos de IA aplicada a processos de negócio — n8n, Claude API, RAG e agent
 | Itens somam R$ 1.200 / total R$ 1.200 | conforme | ✅ conforme |
 | Itens somam R$ 1.200 / total R$ 1.250 | divergente | ✅ divergente |
 
-**Avaliação (eval):** conjunto de 10 casos (7 sobre a lei, 3 fora do escopo) executado automaticamente no n8n, com nota objetiva por caso (a resposta contém o artigo esperado ou a recusa).
-Resultado: **10/10 (100%)**.
-Limitação identificada: a ferramenta de busca foi acionada em 5 das 7 perguntas sobre a lei — em parte dos casos o modelo respondeu com conhecimento próprio. Próximo passo: incluir no eval a verificação de uso da ferramenta.
-
 **Como usar:** importe o arquivo `.json` no n8n e crie uma credencial *Header Auth* com `x-api-key`.
 
 **Stack:** n8n (self-hosted) · Claude API · JSON
@@ -60,7 +56,28 @@ Limitação identificada: a ferramenta de busca foi acionada em 5 das 7 pergunta
 | Quais as bases legais? | Art. 7º, incisos I a X | ✅ após remover trechos duplicados da base e recuperar 8 trechos por busca |
 | Pergunta fora do escopo | Recusa | ✅ após delimitar o escopo no system prompt |
 
+**Avaliação (eval):** conjunto de 10 casos (7 sobre a lei, 3 fora do escopo) executado automaticamente no n8n, com nota objetiva por caso (a resposta contém o artigo esperado ou a recusa).
+Resultado: **10/10 (100%)**.
+Limitação identificada: a ferramenta de busca foi acionada em 5 das 7 perguntas sobre a lei — em parte dos casos o modelo respondeu com conhecimento próprio. Próximo passo: incluir no eval a verificação de uso da ferramenta.
+
 **Aprendizados:**
 - **Resposta incompleta era problema de recuperação, não do modelo.** A ingestão do PDF foi executada três vezes, e cada trecho ficou salvo em triplicado. A busca devolvia cópias do mesmo trecho e o fim do Art. 7º ficava de fora. O diagnóstico veio da contagem de registros (426 = 142 × 3); a correção foi limpar a tabela e reingerir uma única vez.
 - **Resposta fora do escopo era problema de instrução.** O agente respondia perguntas gerais com conhecimento próprio; delimitar o escopo no system prompt resolveu.
-- Cada ajuste foi validado reexecutando todos os
+- **Nota final não basta.** O eval deu 100%, mas a contagem de chamadas da ferramenta mostrou que nem toda resposta veio da base — avaliar o caminho, não só o resultado.
+- Cada ajuste foi validado reexecutando todos os casos (teste de regressão).
+
+**Como usar:**
+1. Suba o banco: `docker run -d --name pgvector -e POSTGRES_PASSWORD=<sua_senha> -p 5432:5432 pgvector/pgvector:pg16`
+2. Instale o Ollama e rode `ollama pull nomic-embed-text`
+3. Importe os dois workflows no n8n e configure as credenciais (Postgres, Ollama e Anthropic)
+4. Envie o PDF **uma vez** pelo formulário de ingestão e converse pelo chat do workflow de consulta
+5. Para reingerir o mesmo documento, limpe a tabela antes: `TRUNCATE n8n_vectors;`
+6. Para rodar o eval: crie a Data table `eval_lgpd` (colunas `pergunta` e `esperado`) e clique em *Execute workflow*
+
+**Próximos passos:** ingestão idempotente (remover os trechos de um arquivo antes de reinseri-lo) e verificação de uso da ferramenta no eval.
+
+**Stack:** n8n (self-hosted) · Claude API · Ollama · PostgreSQL/pgvector (Docker)
+
+---
+
+**Autor:** Lucas Jussen · [LinkedIn](https://linkedin.com/in/lucasjussen)
