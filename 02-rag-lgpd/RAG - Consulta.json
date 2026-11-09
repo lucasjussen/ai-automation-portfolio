@@ -17,6 +17,8 @@
     },
     {
       "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput || $json.pergunta }}",
         "options": {
           "systemMessage": "Você é um assistente especialista EXCLUSIVAMENTE na LGPD (Lei 13.709/2018).\n\nRegras:\n1. Para perguntas sobre proteção de dados, use SEMPRE a ferramenta \"lgpd\" e responda apenas com base nos trechos retornados, citando o artigo (ex.: \"Art. 7º\").\n2. Se os trechos não trouxerem a resposta, diga: \"Não encontrei essa informação na LGPD.\"\n3. Para qualquer pergunta fora da LGPD, NÃO responda com conhecimento geral. Diga apenas: \"Só posso responder dúvidas sobre a LGPD (Lei 13.709/2018).\"\n\nResponda em português, de forma clara e objetiva."
         }
@@ -24,8 +26,8 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        224,
-        0
+        240,
+        -48
       ],
       "id": "e8a85b2c-6dbd-49ac-92e4-1e7efa4e6854",
       "name": "AI Agent"
@@ -56,7 +58,10 @@
       }
     },
     {
-      "parameters": {},
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.sessionId || $json.pergunta }}"
+      },
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.4,
       "position": [
@@ -76,8 +81,8 @@
       "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
       "typeVersion": 1.3,
       "position": [
-        592,
-        16
+        480,
+        80
       ],
       "id": "320dc9aa-621f-469e-ae6c-878758c10cb1",
       "name": "lgpd",
@@ -95,7 +100,7 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
       "typeVersion": 1,
       "position": [
-        688,
+        512,
         224
       ],
       "id": "87248c42-c6bb-4f0d-9a65-e6b2f10afa18",
@@ -106,6 +111,73 @@
           "name": "Ollama account"
         }
       }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        336,
+        368
+      ],
+      "id": "8dec8a0e-929a-41e2-a67a-710757854a80",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "Ka00P1rii4RHVk0T",
+          "mode": "list",
+          "cachedResultName": "eval_lgpd",
+          "cachedResultUrl": "/projects/p12xycaBdo9B1iXe/datatables/Ka00P1rii4RHVk0T"
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        368
+      ],
+      "id": "bf9db51c-a76b-47ae-a8f8-57c07c65452a",
+      "name": "Get row(s)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c9d27bef-3b33-42e1-b327-603fc0548129",
+              "name": "pergunta",
+              "value": "={{ $('Get row(s)').item.json.pergunta }}",
+              "type": "string"
+            },
+            {
+              "id": "5ba71de3-0c71-4856-8b09-eed73f9d10c2",
+              "name": "esperado",
+              "value": "={{ $('Get row(s)').item.json.esperado }}",
+              "type": "string"
+            },
+            {
+              "id": "2cedac4c-8a2e-4611-8069-bdd6d7dd0b4d",
+              "name": "acerto",
+              "value": "={{ $json.output.includes($('Get row(s)').item.json.esperado) ? 1 : 0 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        608,
+        -48
+      ],
+      "id": "15eb9230-8b36-425a-894a-109e69ff68b6",
+      "name": "Edit Fields"
     }
   ],
   "pinData": {},
@@ -164,6 +236,39 @@
           }
         ]
       ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -172,7 +277,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "82b0d8a2-a48f-4326-98fd-51c9aaf39761",
+  "versionId": "7138ee51-c625-4918-9218-d50d5c10a410",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "93b47404a54bf9ee4986928acb45f0f36d2aed674ae3d19dd9d7f3a3f8adb040"
