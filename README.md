@@ -43,7 +43,7 @@ Projetos de IA aplicada a processos de negócio — n8n, Claude API, RAG e agent
 - **Consulta:** Chat → AI Agent (Claude Haiku 5.5) → ferramenta de busca vetorial → resposta com citação do artigo
 
 **Decisões técnicas:**
-- **Chunks de 1000 caracteres, overlap 200:** pedaços pequenos para busca precisa, com sobreposição para não cortar artigos no meio.
+- **Chunks de 1000 caracteres, overlap 200:** pedaços pequenos para busca precisa, com sobreposição para não cortar artigos no meio. A lei virou 142 trechos.
 - **Embeddings locais (Ollama):** custo zero e os documentos não saem da máquina — relevante para dados sigilosos.
 - **Mesmo modelo de embeddings na ingestão e na consulta:** requisito para que os vetores sejam comparáveis.
 - **Haiku para geração:** a busca faz o trabalho pesado; um modelo menor responde com qualidade, mais rápido e mais barato.
@@ -53,19 +53,10 @@ Projetos de IA aplicada a processos de negócio — n8n, Claude API, RAG e agent
 | Caso | Esperado | Resultado |
 |---|---|---|
 | O que é dado pessoal sensível? | Art. 5º, II | ✅ |
-| Quais as bases legais? | Art. 7º, incisos I a X | ✅ após aumentar os trechos recuperados (4 → 8) |
+| Quais as bases legais? | Art. 7º, incisos I a X | ✅ após remover trechos duplicados da base e recuperar 8 trechos por busca |
 | Pergunta fora do escopo | Recusa | ✅ após delimitar o escopo no system prompt |
 
-**Aprendizados:** respostas incompletas vieram da **recuperação** (poucos trechos), não do modelo. Respostas fora do escopo vieram de um **system prompt** pouco restritivo. Cada ajuste foi validado reexecutando todos os casos (teste de regressão).
-
-**Como usar:**
-1. Suba o banco: `docker run -d --name pgvector -e POSTGRES_PASSWORD=<sua_senha> -p 5432:5432 pgvector/pgvector:pg16`
-2. Instale o Ollama e rode `ollama pull nomic-embed-text`
-3. Importe os dois workflows no n8n e configure as credenciais (Postgres, Ollama e Anthropic)
-4. Envie o PDF pelo formulário de ingestão e converse pelo chat do workflow de consulta
-
-**Stack:** n8n (self-hosted) · Claude API · Ollama · PostgreSQL/pgvector (Docker)
-
----
-
-**Autor:** Lucas Jussen · [LinkedIn](https://linkedin.com/in/lucasjussen)
+**Aprendizados:**
+- **Resposta incompleta era problema de recuperação, não do modelo.** A ingestão do PDF foi executada três vezes, e cada trecho ficou salvo em triplicado. A busca devolvia cópias do mesmo trecho e o fim do Art. 7º ficava de fora. O diagnóstico veio da contagem de registros (426 = 142 × 3); a correção foi limpar a tabela e reingerir uma única vez.
+- **Resposta fora do escopo era problema de instrução.** O agente respondia perguntas gerais com conhecimento próprio; delimitar o escopo no system prompt resolveu.
+- Cada ajuste foi validado reexecutando todos os
