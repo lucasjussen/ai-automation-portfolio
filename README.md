@@ -24,6 +24,10 @@ Projetos de IA aplicada a processos de negócio — n8n, Claude API, RAG e agent
 | Itens somam R$ 1.200 / total R$ 1.200 | conforme | ✅ conforme |
 | Itens somam R$ 1.200 / total R$ 1.250 | divergente | ✅ divergente |
 
+**Avaliação (eval):** conjunto de 10 casos (7 sobre a lei, 3 fora do escopo) executado automaticamente no n8n, com nota objetiva por caso (a resposta contém o artigo esperado ou a recusa).
+Resultado: **10/10 (100%)**.
+Limitação identificada: a ferramenta de busca foi acionada em 5 das 7 perguntas sobre a lei — em parte dos casos o modelo respondeu com conhecimento próprio. Próximo passo: incluir no eval a verificação de uso da ferramenta.
+
 **Como usar:** importe o arquivo `.json` no n8n e crie uma credencial *Header Auth* com `x-api-key`.
 
 **Stack:** n8n (self-hosted) · Claude API · JSON
