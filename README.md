@@ -1,5 +1,7 @@
 # AI Automation Portfolio
 
+> 🌐 **Conheça meu trabalho de um jeito interativo:** [lucasjussen.github.io](https://lucasjussen.github.io) — pergunte qualquer coisa sobre meus projetos.
+
 Projetos de IA aplicada a processos de negócio — n8n, Claude API, RAG e agentes.
 
 ---
